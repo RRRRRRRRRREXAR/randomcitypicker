@@ -8,8 +8,8 @@ interface CityPickerProps {
 export default function CityPicker({ onPickConfirmed }: CityPickerProps) {
   const [countries, setCountries] = useState<string[]>([]);
   const [country, setCountry] = useState("");
-  const [minPop, setMinPop] = useState("");
-  const [maxPop, setMaxPop] = useState("");
+  const [minPop, setMinPop] = useState("200");
+  const [maxPop, setMaxPop] = useState("50000");
   const [result, setResult] = useState<RandomCityResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
