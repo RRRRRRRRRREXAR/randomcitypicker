@@ -6,6 +6,7 @@ services:
       - db_data:/data
     environment:
       - DB_PATH=/data/cities.db
+      - SEED_COUNTRIES=FR,MX,US
 
   frontend:
     build: ./frontend
