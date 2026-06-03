@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Editor files
+.vscode/
+.idea/
+
+# Node.js
+node_modules/
+frontend/dist/
+
+# Go
+backend/data/*.db
+*.exe
+
+# Environment
+.env
+.env.local
