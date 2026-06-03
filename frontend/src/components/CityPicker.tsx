@@ -120,6 +120,22 @@ export default function CityPicker({ onPickConfirmed }: CityPickerProps) {
           }}
         >
           <h3>{result.city.name}</h3>
+          {result.image_url && (
+            <img
+              src={result.image_url}
+              alt={result.city.name}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "240px",
+                borderRadius: "6px",
+                marginBottom: "0.75rem",
+                display: "block",
+              }}
+            />
+          )}
+          {result.summary && (
+            <p style={{ lineHeight: 1.5, marginBottom: "0.75rem" }}>{result.summary}</p>
+          )}
           <p>Country: {result.city.country_code}</p>
           <p>Population: {result.city.population.toLocaleString()}</p>
           <p>

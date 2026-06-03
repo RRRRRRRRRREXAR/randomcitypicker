@@ -34,15 +34,19 @@ var httpClient = &http.Client{Timeout: 5 * time.Second}
 func FetchCitySummary(cityName string, lat, lon float64) (summary string, imageURL string, err error) {
 	// 1. Try exact title match.
 	summary, imageURL, pageType, ok := fetchPageSummary(cityName)
-	if ok && pageType != "disambiguation" {
+	if ok && pageType != "disambiguation" && summary != "" {
 		return summary, imageURL, nil
 	}
 
 	// 2. Fall back to geosearch using coordinates.
-	bestTitle := fetchGeoSearchTitle(lat, lon)
-	if bestTitle != "" && bestTitle != cityName {
-		summary, imageURL, _, ok = fetchPageSummary(bestTitle)
-		if ok {
+	// Try multiple nearby articles and pick the first with a real summary.
+	candidates := fetchGeoSearchTitles(lat, lon, 10)
+	for _, title := range candidates {
+		if title == "" || title == cityName {
+			continue
+		}
+		summary, imageURL, pageType, ok := fetchPageSummary(title)
+		if ok && pageType != "disambiguation" && summary != "" {
 			return summary, imageURL, nil
 		}
 	}
@@ -93,36 +97,37 @@ type geoSearchResponse struct {
 	} `json:"query"`
 }
 
-// fetchGeoSearchTitle queries Wikipedia's geosearch API and returns the title
-// of the nearest article to the given coordinates.
-func fetchGeoSearchTitle(lat, lon float64) string {
+// fetchGeoSearchTitles queries Wikipedia's geosearch API and returns up to `limit`
+// article titles nearest to the given coordinates, ordered by distance.
+func fetchGeoSearchTitles(lat, lon float64, limit int) []string {
 	apiURL := fmt.Sprintf(
-		"https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=%.6f|%.6f&gsradius=10000&gslimit=1&format=json",
-		lat, lon,
+		"https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=%.6f|%.6f&gsradius=10000&gslimit=%d&format=json",
+		lat, lon, limit,
 	)
 	req, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
-		return ""
+		return nil
 	}
 	req.Header.Set("User-Agent", "RandomCityPicker/1.0")
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return ""
+		return nil
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return ""
+		return nil
 	}
 
 	var data geoSearchResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return ""
+		return nil
 	}
 
-	if len(data.Query.GeoSearch) == 0 {
-		return ""
+	titles := make([]string, 0, len(data.Query.GeoSearch))
+	for _, item := range data.Query.GeoSearch {
+		titles = append(titles, item.Title)
 	}
-	return data.Query.GeoSearch[0].Title
+	return titles
 }
