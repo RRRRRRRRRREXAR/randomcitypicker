@@ -39,6 +39,8 @@ input, select {
   border: 1px solid #ccc;
   border-radius: 4px;
   min-width: 120px;
+  background-color: #fff;
+  color: #213547;
 }
 
 button {
