@@ -102,3 +102,33 @@ docker compose -f docker-compose.prod.yml up --build
 ├── docker-compose.prod.yml
 └── README.md
 ```
+
+## CI / CD
+
+This project uses **GitHub Actions** to automatically deploy to a DigitalOcean VM on every push to `main`.
+
+### Required GitHub Secrets
+
+Go to **Settings → Secrets and variables → Actions** and add the following repository secrets:
+
+| Secret | Description |
+|--------|-------------|
+| `SSH_HOST` | Public IP address of your DigitalOcean droplet |
+| `SSH_USER` | SSH username (e.g. `deploy`) |
+| `SSH_PRIVATE_KEY` | Private SSH key for the above user |
+| `DEPLOY_PATH` | Absolute path to the project on the VM (e.g. `/home/deploy/randomcitypicker`) |
+
+### Workflow
+
+- **Trigger**: Push to the `main` branch
+- **Action**: The workflow SSHs into the VM, navigates to `DEPLOY_PATH`, and runs `deploy.sh`
+- **`deploy.sh`** pulls the latest code, rebuilds production containers via `docker-compose.prod.yml`, and prunes old Docker images
+
+### Manual deploy
+
+If you ever need to deploy manually, SSH into the droplet and run:
+
+```bash
+cd /path/to/project
+bash deploy.sh
+```
