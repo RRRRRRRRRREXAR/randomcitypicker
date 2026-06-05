@@ -33,14 +33,15 @@ export async function getCountries(): Promise<string[]> {
 export async function pickRandomCity(
   country: string,
   minPop: number,
-  maxPop: number
+  maxPop: number,
+  signal?: AbortSignal
 ): Promise<RandomCityResponse> {
   const params = new URLSearchParams({
     country,
     minPop: String(minPop),
     maxPop: String(maxPop),
   });
-  const res = await fetch(`${API_BASE}/api/cities/random?${params}`);
+  const res = await fetch(`${API_BASE}/api/cities/random?${params}`, { signal });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }

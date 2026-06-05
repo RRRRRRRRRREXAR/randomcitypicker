@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { pickRandomCity, getCountries, confirmPick, type RandomCityResponse } from "../api";
 
 interface CityPickerProps {
@@ -14,6 +14,7 @@ export default function CityPicker({ onPickConfirmed }: CityPickerProps) {
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     getCountries()
@@ -31,16 +32,26 @@ export default function CityPicker({ onPickConfirmed }: CityPickerProps) {
   }, []);
 
   const handlePick = async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setLoading(true);
     setError("");
     try {
       const data = await pickRandomCity(
         country || "FR",
         minPop === "" ? 0 : Number(minPop),
-        maxPop === "" ? 9999999 : Number(maxPop)
+        maxPop === "" ? 9999999 : Number(maxPop),
+        controller.signal
       );
       setResult(data);
     } catch (err: any) {
+      if (err.name === "AbortError") {
+        return;
+      }
       setError(err.message || "Failed to pick city");
     } finally {
       setLoading(false);

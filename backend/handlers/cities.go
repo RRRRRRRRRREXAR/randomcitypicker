@@ -51,7 +51,7 @@ func RandomCity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	summary, imageURL, _ := services.FetchCitySummary(resp.City.Name, resp.City.Latitude, resp.City.Longitude)
+	summary, imageURL, _ := services.FetchCitySummaryCached(r.Context(), resp.City.ID, resp.City.Name, resp.City.Latitude, resp.City.Longitude)
 	resp.Summary = summary
 	resp.ImageURL = imageURL
 
